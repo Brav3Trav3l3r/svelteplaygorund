@@ -1,43 +1,84 @@
 <script>
 	export let data;
-	import { invalidateAll, goto } from '$app/navigation';
-	import { applyAction, deserialize } from '$app/forms';
-	export let form;
 	import { enhance } from '$app/forms';
-	let forms;
-	// $: console.log(form?.queryObj ?? '');
+	import { isDubbed, provider, currentEp } from '$lib/stores/media.js';
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	$: info = data.info;
+	$: console.log('dub', $isDubbed);
+	$: console.log('provider', $provider);
+
+	let url;
+
+	//run this function when provider or isDub change
+
+	// $: if($isDubbed || $provider){
+	// 	listenStore()
+	// }
+
+	// const listenStore = async () => {
+	// 	console.log('ran')
+	// 	if ($currentEp != ' ') {
+	// 		const newEp = await info.episodes.find((n) => n.number === $currentEp.number);
+	// 		currentEp.set(newEp);
+	// 	}
+	// };
+
+	let pageForm;
+
+	$: if ($currentEp.id) {
+		console.log('ran reactivity')
+		getUrl($currentEp.id)
+	}
+
+	const getUrl = async(id) => {
+		console.log('ran geturl')
+		if (id != null) {
+			const res = await fetch(
+				`http://localhost:8080/https://api-consumet-rust.vercel.app/meta/anilist/watch/${id}?provider=${$provider}`
+			);
+			const data = await res.json();
+			const sources = await data.sources;
+			const obj = await sources.find(el => el.quality === 'default' || el.quality === 'auto' )
+			url = obj.url
+			console.log(url)
+		}
+	}
 </script>
 
-<form
-	method="POST"
-	action="?/changeSrc"
-	name="form"
-	bind:this={forms}
-	use:enhance={({ form, data, action }) => {
-		console.log(form);
-		console.log(data);
-		console.log(action);
-		return async ({ result }) => {
-			console.log(result)
-			if (result.type === 'success') {
-				await invalidateAll();
-			}
-			// applyAction(result);
-		};
-	}}
->
-	<select name="dub">
-		<option value="true" id="true">true</option>
-		<option value="false" id="false">false</option>
+<form bind:this={pageForm} action="?/changeSrc" method="POST" use:enhance>
+	<select
+		name="dub"
+		bind:value={$isDubbed}
+		on:change={(event) => {
+			pageForm.requestSubmit();
+			isDubbed.set(event.target.value);
+		}}
+	>
+		<option value="false">false</option>
+		<option value="true">true</option>
 	</select>
-	<select name="provider">
-		<option value="gogo">gogo</option>
-		<option value="zoro">zoro</option>
+	<select
+		name="provider"
+		bind:value={$provider}
+		on:change={(event) => {
+			pageForm.requestSubmit();
+			provider.set(event.target.value);
+		}}
+	>
+		<option value="gogo">Gogo</option>
+		<option value="zoro">Zoro</option>
 	</select>
-	<button type="submit">Submit</button>
 </form>
 
+<h1>{info.id}</h1>
 {#each info.episodes as eps}
-	<h1>{eps.id}</h1>
+	<h3
+		on:keydown
+		on:click={() => {
+			currentEp.set(eps);
+		}}
+	>
+		{eps.id}
+	</h3>
 {/each}

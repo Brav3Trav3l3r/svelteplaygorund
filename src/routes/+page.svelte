@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
-	import { savedVolume } from '$lib/stores/media.js';
+	import { savedVolume, isDubbed, provider } from '$lib/stores/media.js';
+
 	export let data;
 	$: trend = data.trend.results;
 
@@ -13,7 +14,6 @@
 	let duration = 0;
 	let volume;
 	let muted = false;
-	let form;
 
 	// $:if(muted){
 	// 	savedVolume.set(0)
@@ -42,7 +42,7 @@
 	</script>
 </svelte:head>
 
-<div class="video">
+<!-- <div class="video">
 	{#if showPlayer}
 		<vm-player
 			bind:this={player}
@@ -59,9 +59,9 @@
 			</vm-ui>
 		</vm-player>
 	{/if}
-</div>
+</div> -->
 
-<h3>{currentTime}</h3>
+<!-- <h3>{currentTime}</h3>
 <h3>{duration}</h3>
 <h3>{$savedVolume}</h3>
 
@@ -117,10 +117,10 @@
 <button id="backward" on:click={() => (player.currentTime -= 5)}>-5</button>
 
 <label for="forward">Forward</label>
-<button id="forward" on:click={() => (player.currentTime += 5)}>+5</button>
+<button id="forward" on:click={() => (player.currentTime += 5)}>+5</button> -->
 
 {#each trend as anime}
-	<a href="/{anime.id}"><h3>{anime.id}</h3></a>
+	<a href="/{anime.id}?dub={$isDubbed}&provider={$provider}">{anime.id}</a>
 {/each}
 
 <style>
